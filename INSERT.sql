@@ -17,7 +17,7 @@ INSERT INTO artist(name)
 	values('Rogozin Dmitriy');
 	
 INSERT INTO artist(name)
-	values('Britney Spears');
+	values('Squirtney Spears');
 
 INSERT INTO artist(name)
 	values('Courtney Cox');
@@ -50,7 +50,7 @@ INSERT INTO album(name, year)
 	values('Sunshine', 2018);
 
 INSERT INTO album(name, year)
-	values('Friendship', 2010);
+	values('Friendship', 2020);
 
 INSERT INTO album(name, year)
 	values('Waves of love', 2021);
@@ -112,6 +112,12 @@ INSERT INTO track(name, duration, album_id)
 INSERT INTO track(name, duration, album_id)
 	values('Bottle of Fear', 380, 8);
 
+INSERT INTO track(name, duration, album_id)
+	values('Cup of Joy', 370, 1);
+
+INSERT INTO track(name, duration, album_id)
+	values('My Homework', 360, 2);
+
 INSERT INTO compilation (name, year)
 	values('Of Love', 2018);
 	
@@ -160,6 +166,14 @@ INSERT INTO ArtistGenre (artist_Id, genre_Id)
 INSERT INTO ArtistGenre (artist_Id, genre_Id)
 	values(8,2);
 
+INSERT INTO ArtistGenre (artist_Id, genre_Id)
+	values(1,3);
+
+INSERT INTO ArtistGenre (artist_Id, genre_Id)
+	values(2,4);
+
+INSERT INTO ArtistGenre (artist_Id, genre_Id)
+	values(3,5);
 	
 INSERT INTO AlbumArtist (artist_Id, album_Id)
 	values(1,1);
