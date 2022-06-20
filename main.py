@@ -1,209 +1,77 @@
-class Student:
-    def __init__(self, name, surname, gender):
-        self.name = name
-        self.surname = surname
-        self.gender = gender
-        self.finished_courses = []
-        self.courses_in_progress = []
-        self.grades = {}
+import re
+from pprint import pprint
+import csv
 
-    def avg(self, student):
-        self.avg_grades = 0
-        self.sum_grades = 0
-        self.grades_amount = 0
-        self.avg_grades_course = {}
+with open("phonebook_raw.csv", encoding="utf-8") as f:
+    rows = csv.reader(f, delimiter=",")
+    contacts_list = list(rows)
+    names_pattern = r"([А-я]+) ([А-я]+ ?[А-я]+)?"
+    numbers_pattern = r"^(\+7|8) ?\(?(\d\d\d?)\)? ?-?(\d\d\d) ?-?(\d\d)-?(\d\d) ?\(?([а-я][а-я][а-я].)?( \d+)?\)?"
+    list_of_surnames = []
+    string_counter = 0
+    duplicate_indexes = []
+    human_counter = 0
+    for human in contacts_list:
+        counter = 0
+        list_of_human_names = []
+        for data_element in human:
+            if 0 <= counter < 2:
+                spaces_in_names = re.findall(" ", data_element)
+                if len(spaces_in_names) != 0:
+                    grouped_names = re.search(names_pattern, data_element)
+                    counter_plus_1 = counter + 1
+                    human[counter] = grouped_names.group(1)
+                    human[counter_plus_1] = grouped_names.group(2)
+                    counter_plus_1 = 0
+            elif counter == 5 and data_element != "" and data_element != "phone":
+                grouped_numbers = re.search(numbers_pattern, data_element)
+                second_group = f"({grouped_numbers.group(2)})"
+                data_element = re.sub(r'^(\+7|8) ?\(?(\d\d\d?)\)? ?-?(\d\d\d) ?-?(\d\d)-?(\d\d)( ?)\(?(\(?[а-я][а-я][а-я].)? ?(\d+)?\)?', r'+7 (\2)\3-\4-\5\6\7\8', data_element)
+                contacts_list[human_counter][counter] = data_element
+            counter += 1
+            spaces_in_names = 0
+        human_counter += 1
 
-        for course, grades in self.grades.items():
-            for grade in grades:
-                self.sum_grades += grade
-                self.grades_amount += 1
-            self.avg_grades = self.sum_grades / self.grades_amount
-            self.avg_grades_course[course] = self.avg_grades
-
-    def avg_all(self, course, students=[]):
-        print(f"Анализируемый курс - {course}")
-        grades_sum = 0
-        grades_amount = 0
-        for student in students:
-            print(student.name)
-            for grade in student.grades.get(course):
-                print(f"Суммируемая оценка - {grade}")
-                grades_sum += grade
-                grades_amount += 1
-                print(grades_sum)
-                print(grades_amount)
-            avg_grades_course = grades_sum/grades_amount
-        print(f"Средняя оценка всех студентов на курсе {course} равна {avg_grades_course}")
-
-    def __lt__(self, other):
-        if not isinstance(other, Student):
-            return
-        return self.avg_grades < other.avg_grades
-
-    def __str__(self):
-        text = f"""Статус: Студент
-Имя: {self.name}
-Фамилия: {self.surname}
-Средняя оценка за домашние задания: {self.avg_grades}
-Курсы в процессе изучения: {", ".join(self.courses_in_progress)}
-Завершенные курсы: {"".join(self.finished_courses)}
----"""
-        return text
-
-    def rate_lect(self, lector, course, grade):
-        if isinstance(lector, Lecturer) and course in self.courses_in_progress and course in lector.courses_attached:
-            if course in lector.grades:
-                lector.grades[course] += [grade]
-            else:
-                lector.grades[course] = [grade]
+    # pprint(contacts_list)
+    for normal_human_string in contacts_list: #для каждой человеческой строчки
+        # print(string_counter, normal_human_string)
+        if normal_human_string[0] in list_of_surnames: #если эта фамилия имеется в списке фамилий
+            first_duplicate = list_of_surnames.index(normal_human_string[0]) #получаем индекс ранее вставленной фамилии
+            # print(f"FIRST DUPLICATE - {first_duplicate}")
+            duplicate_indexes.append(first_duplicate) #добавляем индекс этой фамилии в список дубликатов
+            column_counter=0 # счетчик колонок равен 0
+            element_counter=0
+            # print(f"===")
+            list_of_surnames.append(normal_human_string[0])
+            for element in normal_human_string: # в каждой колонке человеческой строчки
+                if column_counter > 6: # если это 7-ая колонка - то выход из цикла
+                    break
+                if element == "": # если в какой-то колонке значение второго дубликата - пустое, то
+                    # print(f"Работа в строке - {string_counter}, колонке - {column_counter}")
+                    # print(f"Номер пустого элемента - {element_counter}")
+                    # print(f"Строка + Пустой элемент второго дубликата ДО ЗАМЕНЫ:")
+                    # print(contacts_list[string_counter], contacts_list[string_counter][column_counter])
+                    contacts_list[string_counter][column_counter] = contacts_list[first_duplicate][column_counter]
+                    # print(f"Строка в базовом списке В КОТОРОЙ меняем - {contacts_list[string_counter]}")
+                    # print(f"Элемент в базовом списке КОТОРЫЙ - {contacts_list[string_counter][column_counter]}")
+                    # print(f"Строка в базовом спике НА КОТОРУЮ меняем - {contacts_list[first_duplicate]}")
+                    # print(f"Элемент в базовом спике НА КОТОРЫЙ меняем - {contacts_list[first_duplicate][column_counter]}")
+                    # #назначь второму дубликату в колонке с пустотой значение из первого дубликата
+                    # print(f"Строка + Пустой элемент второго дубликата ПОСЛЕ ЗАМЕНЫ:")
+                    # print(contacts_list[first_duplicate], contacts_list[first_duplicate][column_counter])
+                column_counter+=1
         else:
-            return 'Ошибка'
+            list_of_surnames.append(normal_human_string[0])
+        string_counter +=1
 
-class Mentor:
-    def __init__(self, name, surname):
-        self.name = name
-        self.surname = surname
-        self.courses_attached = []
+    # pprint(contacts_list)
 
-    def __str__(self):
-        text = f"{self.name, self.surname}"
-        return text
+    for duplicate_in_index in duplicate_indexes:
+        # print(contacts_list[duplicate_in_index])
+        contacts_list.pop(duplicate_in_index)
 
-class Lecturer(Mentor):
-    def __init__(self, name, surname):
-        self.name = name
-        self.surname = surname
-        self.courses_attached = []
-        self.grades = {}
-        self.grades_avg = int
+    pprint(contacts_list)
 
-    def avg(self, lector):
-        self.avg_grades = 0
-        self.sum_grades = 0
-        self.grades_amount = 0
-        for grades in self.grades.values():
-            for grade in grades:
-                self.sum_grades += grade
-                self.grades_amount += 1
-        self.avg_grades = self.sum_grades / self.grades_amount
-
-    def avg_all(self, course, lectors=[]):
-        print(f"Анализируемый курс - {course}")
-        grades_sum = 0
-        grades_amount = 0
-        for lector in lectors:
-            for grade in lector.grades.get(course):
-                print(f"Суммируемая оценка - {grade}")
-                grades_sum += grade
-                grades_amount += 1
-                print(grades_sum)
-                print(grades_amount)
-            avg_grades_course = grades_sum/grades_amount
-        print(f"Средняя оценка всех лекторов на курсе {course} равна {avg_grades_course}")
-
-    def __lt__(self, other):
-        if not isinstance(other, Lecturer):
-            return
-        return self.avg_grades < other.avg_grades
-
-    def __str__(self):
-        text = f"""Статус: Лектор
-Имя: {self.name} 
-Фамилия: {self.surname}
-Средняя оценка за лекции: {self.avg_grades}
----"""
-        return text
-
-class Reviewer(Mentor):
-    def rate_hw(self, student, course, grade):
-        if isinstance(student, Student) and course in self.courses_attached and course in student.courses_in_progress:
-            if course in student.grades:
-                student.grades[course] += [grade]
-            else:
-                student.grades[course] = [grade]
-        else:
-            return 'Ошибка'
-
-    def __str__(self):
-        text = f"""Статус: Ревьюер
-Имя: {self.name} 
-Фамилия: {self.surname}
----"""
-        return text
-
-best_student = Student('Павел', 'Прахов', 'M')
-best_student.courses_in_progress += ['Python']
-best_student.courses_in_progress += ['Front-End']
-
-worst_student = Student('Олег', 'Пипкин', 'M')
-worst_student.courses_in_progress += ['Python']
-worst_student.courses_in_progress += ['Front-End']
-
-best_lector = Lecturer("Лектор", "Лекторович")
-best_lector.courses_attached += ["Python"]
-best_lector.courses_attached += ["Front-End"]
-
-worst_lector = Lecturer("Коллектор", "Коллекторович")
-worst_lector.courses_attached += ["Python"]
-worst_lector.courses_attached += ["Front-End"]
-
-cool_student = Student("Валерия", "Новодворская", "Ж")
-cool_student.courses_in_progress += ["Python"]
-cool_student.courses_in_progress += ["Front-End"]
-
-
-cool_mentor = Mentor('Some', 'Buddy')
-cool_mentor.courses_attached += ['Python']
-cool_mentor.courses_attached += ['Front-End']
-
-best_mentor = Mentor('Any', 'Buddy')
-best_mentor.courses_attached += ['Python']
-best_mentor.courses_attached += ['Front-End']
-
-cool_reviewer = Reviewer("Вася", "Пупкин")
-cool_reviewer.courses_attached += ["Python"]
-cool_reviewer.courses_attached += ["Front-End"]
-
-best_reviewer = Reviewer("Тимур", "Галямов")
-best_reviewer.courses_attached += ["Python"]
-best_reviewer.courses_attached += ["Front-End"]
-
-cool_reviewer.rate_hw(best_student, 'Python', 10)
-cool_reviewer.rate_hw(best_student, 'Python', 10)
-cool_reviewer.rate_hw(best_student, 'Front-End', 5)
-cool_reviewer.rate_hw(best_student, 'Front-End', 8)
-
-cool_reviewer.rate_hw(worst_student, 'Python', 10)
-cool_reviewer.rate_hw(worst_student, 'Python', 10)
-cool_reviewer.rate_hw(worst_student, 'Front-End', 7)
-cool_reviewer.rate_hw(worst_student, 'Front-End', 6)
-
-cool_student.rate_lect(best_lector, 'Python', 10)
-cool_student.rate_lect(best_lector, 'Python', 9)
-cool_student.rate_lect(best_lector, 'Front-End', 10)
-cool_student.rate_lect(best_lector, 'Front-End', 9)
-
-cool_student.rate_lect(worst_lector, 'Python', 1)
-cool_student.rate_lect(worst_lector, 'Python', 2)
-cool_student.rate_lect(worst_lector, 'Front-End', 2)
-cool_student.rate_lect(worst_lector, 'Front-End', 1)
-
-best_lector.avg(best_lector)
-best_student.avg(best_student)
-worst_lector.avg(worst_lector)
-worst_student.avg(worst_lector)
-
-print(f"Лучшие оценки лектора - это {best_lector.grades} и они у лектора {best_lector}")
-print(f"Лучшие оценки студента - это {best_student.grades} и они у студента {best_student}")
-print(cool_reviewer)
-print(best_lector)
-print(worst_lector)
-print(best_student)
-print(worst_student)
-
-print(best_student > worst_student)
-print(best_lector > worst_lector)
-
-best_student.avg_all("Front-End", [worst_student, best_student])
-best_lector.avg_all("Front-End", [best_lector, worst_lector])
-
+with open("phonebook.csv", "w", newline='') as f:
+  datawriter = csv.writer(f, delimiter=',')
+  datawriter.writerows(contacts_list)
